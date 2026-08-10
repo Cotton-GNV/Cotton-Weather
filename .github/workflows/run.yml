@@ -1,0 +1,40 @@
+name: cotton-weather
+
+on:
+  schedule:
+    - cron: '15 */6 * * *'   # 00:15, 06:15, 12:15, 18:15 UTC
+  workflow_dispatch:          # bouton "Run workflow" manuel
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Execute notebook
+        run: jupyter nbconvert --to notebook --execute global_cotton_weather_v11.ipynb --output /tmp/executed.ipynb
+
+      - name: Move outputs to docs/
+        run: |
+          mkdir -p docs
+          mv global_cotton_weather.html docs/index.html
+          mv global_cotton_weather.json docs/global_cotton_weather.json
+
+      - name: Commit and push
+        run: |
+          git config user.name  github-actions
+          git config user.email github-actions@github.com
+          git add docs/
+          git commit -m "Update dashboard $(date -u +%FT%TZ)" || echo "no changes to commit"
+          git push
