@@ -2,8 +2,8 @@ name: cotton-weather
 
 on:
   schedule:
-    - cron: '15 */6 * * *'   # 00:15, 06:15, 12:15, 18:15 UTC
-  workflow_dispatch:          # bouton "Run workflow" manuel
+    - cron: '15 */6 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 90                    # <-- passé de 30 à 90
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +23,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Execute notebook
-        run: jupyter nbconvert --to notebook --execute global_cotton_weather_v11.ipynb --output /tmp/executed.ipynb
+        run: |
+          jupyter nbconvert --to notebook --execute global_cotton_weather_v11.ipynb \
+            --output /tmp/executed.ipynb \
+            --ExecutePreprocessor.timeout=3600      # 60 min max par cellule
 
       - name: Move outputs to docs/
         run: |
