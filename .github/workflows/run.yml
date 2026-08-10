@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90                    # <-- passé de 30 à 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -22,11 +22,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Execute notebook
-        run: |
-          jupyter nbconvert --to notebook --execute global_cotton_weather_v11.ipynb \
-            --output /tmp/executed.ipynb \
-            --ExecutePreprocessor.timeout=3600      # 60 min max par cellule
+      - name: Convert notebook to script
+        run: jupyter nbconvert --to script global_cotton_weather_v11.ipynb --output cotton_script
+
+      - name: Run script with live output
+        run: python -u cotton_script.py
+        env:
+          PYTHONUNBUFFERED: "1"
 
       - name: Move outputs to docs/
         run: |
